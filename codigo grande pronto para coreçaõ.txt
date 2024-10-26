@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercearia Pro - Sistema de Gerenciamento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            background-color: #000;
+            color: #fff;
+            min-height: 100vh;
+        }
+        .nav-link {
+            color: #007bff !important;
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: #007bff;
+            color: #fff !important;
+            border-radius: 5px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .table thead th {
+            background-color: #007bff;
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                font-size: 12pt;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <nav class="col-md-2 d-none d-md-block sidebar py-4">
+                <div class="position-sticky">
+                    <h3 class="text-center mb-4">Mercearia Pro</h3>
+                    <ul class="nav flex-column">
+                        <li class="nav-item mb-2">
+                            <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#clientes" data-bs-toggle="tab">
+                                <i class="fas fa-users me-2"></i> Clientes
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#funcionarios" data-bs-toggle="tab">
+                                <i class="fas fa-user-tie me-2"></i> Funcionários
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#projetos" data-bs-toggle="tab">
+                                <i class="fas fa-project-diagram me-2"></i> Projetos
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#pagamentos" data-bs-toggle="tab">
+                                <i class="fas fa-dollar-sign me-2"></i> Pagamentos
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#estoque" data-bs-toggle="tab">
+                                <i class="fas fa-boxes me-2"></i> Estoque
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#orcamentos" data-bs-toggle="tab">
+                                <i class="fas fa-file-invoice-dollar me-2"></i> Orçamentos
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#contratos" data-bs-toggle="tab">
+                                <i class="fas fa-file-contract me-2"></i> Contratos
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#relatorios" data-bs-toggle="tab">
+                                <i class="fas fa-chart-line me-2"></i> Relatórios
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#fluxo_caixa" data-bs-toggle="tab">
+                                <i class="fas fa-wallet me-2"></i> Fluxo de Caixa
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#precificacao" data-bs-toggle="tab">
+                                <i class="fas fa-tags me-2"></i> Precificação
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link" href="#fornecedores" data-bs-toggle="tab">
+                                <i class="fas fa-truck me-2"></i> Fornecedores
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="tab-content">
+                    <!-- Dashboard Module -->
+                    <div class="tab-pane fade show active" id="dashboard">
+                        <h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card text-white bg-primary mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Vendas Totais</h5>
+                                        <p class="card-text" id="total-vendas">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-success mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Lucro</h5>
+                                        <p class="card-text" id="total-lucro">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-info mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Clientes Ativos</ h5>
+                                        <p class="card-text" id="total-clientes">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="chart-title">Métricas Financeiras</h4>
+                            <div class="chart-container">
+                                <canvas id="fluxo-caixa-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clientes Module -->
+                    <div class="tab-pane fade" id="clientes">
+                        <h2 class="mb-4"><i class="fas fa-users"></i> Cadastro de Clientes</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form id="form-clientes">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="cliente-nome" class="form-label">Nome</label>
+                                            <input type="text" class="form-control" id="cliente-nome" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="cliente-email" class="form-label">E-mail</label>
+                                            <input type="email" class="form-control" id="cliente-email" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="cliente-telefone" class="form-label">Telefone</label>
+                                            <input type="tel" class="form-control" id="cliente-telefone" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="cliente-endereco" class="form-label">Endereço</label>
+                                            <input type="text" class="form-control" id="cliente-endereco" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success no-print"><i class="fas fa-plus me-1"></i> Adicionar Cliente</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-clientes">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>E-mail</th>
+                                            <th>Telefone</th>
+                                            <th>Endereço</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Clientes cadastrados aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Funcionários Module -->
+                    <div class="tab-pane fade" id="funcionarios">
+                        <h2 class="mb-4"><i class="fas fa-user-tie"></i> Gestão de Funcionários</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form id="form-funcionarios">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="funcionario-nome" class="form-label">Nome</label>
+                                            <input type="text" class="form-control" id="funcionario-nome" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="funcionario-cargo" class="form-label">Cargo</label>
+                                            <input type="text" class="form-control" id="funcionario-cargo" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="funcionario-salario" class="form-label">Salário</label>
+                                            <input type="number" class="form-control" id="funcionario-salario" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="funcionario-admissao" class="form-label">Data de Admissão</label>
+                                            <input type="date" class="form-control" id="funcionario-admissao" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success no-print"><i class="fas fa-plus me-1"></i> Adicionar Funcionário</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-funcionarios">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Cargo</th>
+                                            <th>Salário</th>
+                                            <th>Data de Admissão</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </ thead>
+                                    <tbody>
+                                        <!-- Funcionários cadastrados aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Projetos Module -->
+                    <div class="tab-pane fade" id="projetos">
+                        <h2 class="mb-4"><i class="fas fa-project-diagram"></i> Controle de Projetos</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form id="form-projetos">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="projeto-nome" class="form-label">Nome do Projeto</label>
+                                            <input type="text" class="form-control" id="projeto-nome" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="projeto-descricao" class="form-label">Descrição</label>
+                                            <input type="text" class="form-control" id="projeto-descricao" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="projeto-data" class="form-label">Data de Entrega</label>
+                                            <input type="date" class="form-control" id="projeto-data" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="projeto-status" class="form-label">Status</label>
+                                            <select class="form-select" id="projeto-status" required>
+                                                <option value="Pendente">Pendente</option>
+                                                <option value="Em Andamento">Em Andamento</option>
+                                                <option value="Concluído">Concluído</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success no-print"><i class="fas fa-plus me-1"></i> Adicionar Projeto</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-projetos">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Descrição</th>
+                                            <th>Data de Entrega</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Projetos cadastrados aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagamentos Module -->
+                    <div class="tab-pane fade" id="pagamentos">
+                        <h2 class="mb-4"><i class="fas fa-dollar-sign"></i> Gestão de Pagamentos</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form id="form-pagamentos">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="pagamento-cliente" class="form-label">Cliente</label>
+                                            <select class="form-select" id="pagamento-cliente" required>
+                                                <option value="" disabled selected>Selecione o Cliente</option>
+                                                <!-- Opções de clientes serão adicionadas dinamicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="pagamento-valor" class="form-label">Valor Total</label>
+                                            <input type="number" class="form-control" id="pagamento-valor" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="pagamento-parcelas" class="form-label">Número de Parcelas</label>
+                                            <input type="number" class="form-control" id="pagamento-parcelas" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="pagamento-data" class="form-label">Data de Pagamento</label>
+                                            <input type="date" class="form-control" id="pagamento-data" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success no-print"><i class="fas fa-plus me-1"></i> Registrar Pagamento</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-pagamentos">
+                                    <thead>
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>Valor Total</th>
+                                            <th>Parcelas Pagas</th>
+                                            <th>Parcelas Pendentes</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Pagamentos cadastrados aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estoque Module -->
+                    <div class="tab-pane fade" id="estoque">
+                        <h2 class="mb-4"><i class="fas fa-boxes"></i> Controle de Estoque</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form id="form-estoque">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="estoque-nome" class="form-label">Nome do Produto</label>
+                                            <input type="text" class="form-control" id="estoque-nome" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="estoque-descricao" class="form-label">Descrição</label>
+                                            <input type="text" class="form-control" id="estoque-descricao" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="estoque-preco" class="form-label">Preço</label>
+                                            <input type="number" class="form-control" id="estoque-preco" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="estoque-quantidade" class="form-label">Quantidade</label>
+                                            <input type="number" class="form-control" id="estoque-quantidade" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success no-print"><i class="fas fa-plus me-1"></i> Adicionar Produto</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-estoque">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Descrição</th>
+                                            <th>Preço</th>
+                                            <th>Quantidade</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Produtos cadastrados aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orçamentos Module -->
+                    <div class="tab-pane fade" id="orcamentos">
+                        <h2 class="mb-4"><i class="fas fa-file-invoice-dollar"></i> Orçamentos</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form id="form-orcamentos">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="orcamento-cliente" class="form-label">Cliente</label>
+                                            <select class="form-select" id="orcamento-cliente" required>
+                                                <option value="" disabled selected>Selecione o Cliente</option>
+                                                <!-- Opções de clientes serão adicionadas dinamicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="orcamento-descricao" class="form-label">Descrição</label>
+                                            <input type="text" class="form-control" id="orcamento-descricao" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="orcamento-valor" class="form-label">Valor Total</label>
+                                            <input type="number" class="form-control" id="orcamento-valor" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="orcamento-validade" class="form-label">Validade</label>
+                                            <input type="date" class="form-control" id="orcamento-validade" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="orcamento-condicao" class="form-label">Condições de Pagamento</label>
+                                            <input type="text" class="form-control" id="orcamento-condicao" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success no-print"><i class="fas fa-plus me-1"></i> Criar Orçamento</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-orcamentos">
+                                    <thead>
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>Descrição</th>
+                                            <th>Valor Total</th>
+                                            <th>Validade</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Orçamentos cadastrados aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contratos Module -->
+                    <div class="tab-pane fade" id="contratos">
+                        <h2 class="mb-4"><i class="fas fa-file-contract"></i> Contratos</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form id="form-contratos">
+                                    <h5>Dados do Contratante</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="contrato-nome-contratante" class="form-label">Nome</label>
+                                            <input type="text" class="form-control" id="contrato-nome-contratante" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="contrato-cpf-cnpj-contratante" class="form-label">CPF/CNPJ</label>
+                                            <input type="text" class="form-control" id="contrato-cpf-cnpj-contratante" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="contrato-telefone-contratante" class="form-label">Telefone</label>
+                                            <input type="tel" class="form-control" id="contrato-telefone-contratante" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="contrato-endereco-contratante" class="form-label">Endereço</label>
+                                            <input type="text" class="form-control" id="contrato-endereco-contratante" required>
+                                        </div>
+                                    </div>
+                                    <h5>Dados da Contratada</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="contrato-nome-contratada" class="form-label">Nome</label>
+                                            <input type="text" class="form-control" id="contrato-nome-contratada" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="contrato-cnpj-contratada" class="form-label">CNPJ</label>
+                                            <input type="text" class="form-control" id="contrato-cnpj-contratada" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="contrato-telefone-contratada" class="form-label">Telefone</label>
+                                            <input type="tel" class="form-control" id="contrato-telefone-contratada" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="contrato-endereco-contratada" class="form-label">Endereço</label>
+                                            <input type="text" class="form-control" id="contrato-endereco-contratada" required>
+                                        </div>
+                                    </div>
+                                    <h5>Objeto do Contrato</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="contrato-descricao-servico" class="form-label">Descrição dos Serviços</label>
+                                            <textarea class="form-control" id="contrato-descricao-servico" rows="2" required></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="contrato-prazo-execucao" class="form-label">Prazo de Execução</label>
+                                            <input type="number" class="form-control" id="contrato-prazo-execucao" placeholder="Dias Úteis" required>
+                                        </div>
+                                    </div>
+                                    <h5>Obrigações da Contratada</h5>
+                                    <ul>
+                                        <li>Prestar os serviços de acordo com o descrito no item 1;</li>
+                                        <li>Utilizar materiais de boa qualidade, conforme especificado no orçamento;</li>
+                                        <li>Cumprir o prazo de execução acordado;</li>
+                                        <li>Garantir a segurança e limpeza do local de trabalho.</li>
+                                    </ul>
+                                    <h5>Obrigações do Contratante</h5>
+                                    <ul>
+                                        <li>Efetuar o pagamento conforme estipulado no presente contrato;</li>
+                                        <li>Fornecer todas as informações e condições necessárias para a execução dos serviços;</li>
+                                        <li>Facilitar o acesso ao local onde os serviços serão realizados.</li>
+                                    </ul>
+                                    <h5>Pagamento</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="contrato-valor-total" class="form-label">Valor Total (R$)</label>
+                                            <input type="number" class="form-control" id="contrato-valor-total" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="contrato-sinal-entrada" class="form-label">Sinal de Entrada (R$)</label>
+                                            <input type="number" class="form-control" id="contrato-sinal-entrada" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="contrato-num-parcelas" class="form-label">Número de Parcelas</label>
+                                            <input type="number" class="form-control" id="contrato-num-parcelas" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="contrato-nome-banco" class="form-label">Banco</label>
+                                            <input type="text" class="form-control" id="contrato-nome-banco" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="contrato-agencia" class="form-label">Agência</label>
+                                            <input type="text" class="form-control" id="contrato-agencia" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="contrato-conta" class="form-label">Conta</label>
+                                            <input type="text" class="form-control" id="contrato-conta" required>
+                                        </div>
+                                    </div>
+                                    <h5>Garantia</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="contrato-garantia-meses" class="form-label">Período de Garantia (meses)</label>
+                                            <input type="number" class="form-control" id="contrato-garantia-meses" required>
+                                        </div>
+                                    </div>
+                                    <h5>Rescisão</h5>
+                                    <ul>
+                                        <li>Em caso de descumprimento de qualquer das cláusulas;</li>
+                                        <li>Por mútuo acordo, mediante aviso prévio de ____ dias.</li>
+                                    </ul>
+                                    <h5>Foro</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="contrato-foro" class="form-label">Comarca</label>
+                                            <input type="text" class="form-control" id="contrato-foro" required>
+                                        </div>
+                                    </div>
+                                    <h5>Assinaturas</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <p>______________________________</p>
+                                            <p><strong>Assinatura do Contratante</strong></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p>______________________________</p>
+                                            <p><strong>Assinatura da Contratada</strong></p>
+                                        </div>
+                                    </div>
+                                    <h5>Local e Data</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <input type="text" class="form-control" id="contrato-local-data" placeholder="Cidade, dia de mês de ano" required>
+                                        </div>
+                                    </div>
+                                    <h5>Testemunhas</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <p>Nome: ___________________________</p>
+                                            <p>CPF: ______________________________</p>
+                                            <p>Assinatura: ________________________</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p>Nome: ___________________________</p>
+                                            <p>CPF: ______________________________</p>
+                                            <p>Assinatura: ________________________</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary no-print" onclick="imprimirContrato()">
+                                        <i class="fas fa-print me-1"></i> Imprimir Contrato
+                                    </button>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-contratos">
+                                    <thead>
+                                        <tr>
+                                            <th>Contratante</th>
+                                            <th>Prestador</th>
+                                            <th>Valor Total</th>
+                                            <th>Data de Assinatura</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Contratos cadastrados aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Relatórios Module -->
+                    <div class="tab-pane fade" id="relatorios">
+                        <h2 class="mb-4"><i class="fas fa-chart-line"></i> Relatórios</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="relatorio-filtro-data" class="form-label">Filtrar por Data</label>
+                                    <input type="date" class="form-control" id="relatorio-filtro-data">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="relatorio-filtro-status" class="form-label">Filtrar por Status</label>
+                                    <select class="form-select" id="relatorio-filtro-status">
+                                        <option value="" selected>Todos</option>
+                                        <option value="Pendente">Pendente</option>
+                                        <option value="Em Andamento">Em Andamento</option>
+                                        <option value="Concluído">Concluído</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary me-2 no-print" id="exportar-pdf"><i class="fas fa-file-pdf me-1"></i> Exportar PDF</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="relatorio-grafico"></canvas>
+                                </div>
+                                <table class="table table-bordered table-hover mt-4" id="tabela-relatorios">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Cliente</th>
+                                            <th>Status</th>
+                                            <th>Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Relatórios dinâmicos aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fluxo de Caixa Module -->
+                    <div class="tab-pane fade" id="fluxo_caixa" role="tabpanel" aria-labelledby="fluxo_caixa-tab">
+                        <h2 class="mb-4"><i class="fas fa-wallet"></i> Fluxo de Caixa</h2>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card text-white bg-info mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total de Entradas</h5>
+                                        <p class="card-text" id="fc-entradas">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-warning mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total de Saídas</h5>
+                                        <p class="card-text" id="fc-saidas">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-success mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Saldo Atual</h5>
+                                        <p class="card-text" id="fc-saldo">R$ 0,00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="chart-title">Comparação Mensal</h4>
+                            <div class="chart-container">
+                                <canvas id="fluxo-caixa-comparacao"></canvas>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class=" chart-title">Cadastrar Transação</h4>
+                            <form id="form-transacoes">
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label for="transacao-descricao" class="form-label">Descrição</label>
+                                        <input type="text" class="form-control" id="transacao-descricao" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="transacao-categoria" class="form-label">Categoria</label>
+                                        <input type="text" class="form-control" id="transacao-categoria" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="transacao-tipo" class="form-label">Tipo</label>
+                                        <select class="form-select" id="transacao-tipo" required>
+                                            <option value="" disabled selected>Selecione o Tipo</option>
+                                            <option value="Entrada">Entrada</option>
+                                            <option value="Despesa">Despesa</option>
+                                            <option value="Saída">Saída</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="transacao-valor" class="form-label">Valor</label>
+                                        <input type="number" class="form-control" id="transacao-valor" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="transacao-data" class="form-label">Data</label>
+                                        <input type="date" class="form-control" id="transacao-data" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success no-print"><i class="fas fa-plus me-1"></i> Adicionar Transação</button>
+                            </form>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="chart-title">Tabela de Transações</h4>
+                            <table class="table table-bordered table-hover" id="tabela-transacoes">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Descrição</th>
+                                        <th>Tipo</th>
+                                        <th>Categoria</th>
+                                        <th>Valor</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Transações aparecem aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="chart-title">Análise de Fluxo de Caixa</h4>
+                            <div class="chart-container">
+                                <canvas id="analise-fluxo-caixa"></canvas>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="chart-title">Planejamento</h4>
+                            <form id="form-planejamento-fc">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="planejamento-receitas" class="form-label">Previsão de Receitas</label>
+                                        <input type="number" class="form-control" id="planejamento-receitas" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="planejamento-despesas" class="form-label">Previsão de Despesas</label>
+                                        <input type="number" class="form-control" id="planejamento-despesas" required>
+                                    </div>
+                                    <div class="col-md-4 align-self-end">
+                                        <button type="submit" class="btn btn-success no-print"><i class="fas fa-plus me-1"></i> Adicionar Previsão</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="chart-title">Alertas</h4>
+                            <div class="alert alert-danger" role="alert" id="alerta-fluxo-negativo" style="display: none;">
+                                Atenção! O fluxo de caixa está negativo.
+                            </div>
+                            <div class="alert alert-warning" role="alert" id="alerta-fluxo-baixo" style="display: none;">
+                                Atenção! O saldo está baixo.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Precificação Module -->
+                    <div class="tab-pane fade" id="precificacao">
+                        <h2 class="mb-4"><i class="fas fa-tags"></i> Precificação</h2>
+                        <div class="card mb-4">
+                            <div class="card-body ">
+                                <form id="form-precificacao">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="produto-nome" class="form-label">Nome do Produto</label>
+                                            <input type="text" class="form-control" id="produto-nome" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="produto-custo" class="form-label">Custo</label>
+                                            <input type="number" class="form-control" id="produto-custo" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="produto-margem" class="form-label">Margem de Lucro (%)</label>
+                                            <input type="number" class="form-control" id="produto-margem" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="produto-preco" class="form-label">Preço de Venda</label>
+                                            <input type="number" class="form-control" id="produto-preco" readonly>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Calcular Preço</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-precificacao">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome do Produto</th>
+                                            <th>Custo</th>
+                                            <th>Margem de Lucro (%)</th>
+                                            <th>Preço de Venda</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Produtos precificados aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fornecedores Module -->
+                    <div class="tab-pane fade" id="fornecedores">
+                        <h2 class="mb-4"><i class="fas fa-truck"></i> Fornecedores</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form id="form-fornecedores">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label for="fornecedor-nome" class="form-label">Nome</label>
+                                            <input type="text" class="form-control" id="fornecedor-nome" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="fornecedor-cnpj" class="form-label">CNPJ</label>
+                                            <input type="text" class="form-control" id="fornecedor-cnpj" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="fornecedor-telefone" class="form-label">Telefone</label>
+                                            <input type="tel" class="form-control" id="fornecedor-telefone" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="fornecedor-endereco" class="form-label">Endereço</label>
+                                            <input type="text" class="form-control" id="fornecedor-endereco" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Adicionar Fornecedor</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-bordered table-hover" id="tabela-fornecedores">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>CNPJ</th>
+                                            <th>Telefone</th>
+                                            <th>Endereço</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Fornecedores aparecem aqui -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Edit Cliente Modal -->
+    <div class="modal fade" id="editClienteModal" tabindex="-1" aria-labelledby="editClienteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editClienteModalLabel">Editar Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body ">
+                    <form id="form-edit-cliente">
+                        <input type="hidden" id="editar-cliente-index">
+                        <div class="mb-3">
+                            <label for="editar-cliente-nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="editar-cliente-nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-cliente-email" class="form-label">E-mail</label>
+                            <input type="email" class="form-control" id="editar-cliente-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-cliente-telefone" class="form-label">Telefone</label>
+                            <input type="tel" class="form-control" id="editar-cliente-telefone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-cliente-endereco" class="form-label">Endereço</label>
+                            <input type="text" class="form-control" id="editar-cliente-endereco" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Salvar Alterações</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Funcionário Modal -->
+    <div class="modal fade" id="editFuncionarioModal" tabindex="-1" aria-labelledby="editFuncionarioModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editFuncionarioModalLabel">Editar Funcionário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-edit-funcionario">
+                        <input type="hidden" id="editar-funcionario-index">
+                        <div class="mb-3">
+                            <label for="editar-funcionario-nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="editar-funcionario-nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-funcionario-cargo" class="form-label">Cargo</label>
+                            <input type="text" class="form-control" id="editar-funcionario-cargo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-funcionario-salario" class="form-label">Salário</label>
+                            <input type="number" class="form-control" id="editar-funcionario-salario" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-funcionario-admissao" class="form-label">Data de Admissão</label>
+                            <input type="date" class="form-control" id="editar-funcionario-admissao" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Salvar Alterações</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Projeto Modal -->
+    <div class="modal fade" id="editProjetoModal" tabindex="-1" aria-labelledby="editProjetoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProjetoModalLabel">Editar Projeto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-edit-projeto">
+                        <input type="hidden" id="editar-projeto-index">
+                        <div class="mb-3">
+                            <label for="editar-projeto-nome" class="form-label">Nome do Projeto</label>
+                            <input type="text" class="form-control" id="editar-projeto-nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-projeto-descricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="editar-projeto-descricao" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-pro jeto-data" class="form-label">Data de Entrega</label>
+                            <input type="date" class="form-control" id="editar-projeto-data" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-projeto-status" class="form-label">Status</label>
+                            <select class="form-select" id="editar-projeto-status" required>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Em Andamento">Em Andamento</option>
+                                <option value="Concluído">Concluído</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editar-projeto-progresso" class="form-label">Progresso (%)</label>
+                            <input type="number" class="form-control" id="editar-projeto-progresso" min="0" max="100" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Salvar Alterações</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script>
+        let chartEntradas, chartSaidas, chartSaldo, chartFluxoCaixa;
+        let chartFluxoCaixaComparacao, chartAnaliseFluxoCaixa, chartGraficoCargosSalarios, chartGraficoPagamentos, chartGraficoEstoque, chartRelatorioGrafico;
+        let transactions = [];
+        let contratos = [];
+        let clientes = [];
+        let funcionarios = [];
+        let projetos = [];
+        let pagamentos = [];
+        let estoque = [];
+        let orcamentos = [];
+        let previsoes = [];
+
+        // Clientes
+        function atualizarSelecoesClientes() {
+            const selectPagamento = document.getElementById('pagamento-cliente');
+            const selectOrcamento = document.getElementById('orcamento-cliente');
+            const tabelaClientes = document.getElementById('tabela-clientes').getElementsByTagName('tbody')[0];
+            selectPagamento.innerHTML = '<option value="" disabled selected>Selecione o Cliente</option>';
+            selectOrcamento.innerHTML = '<option value="" disabled selected>Selecione o Cliente</option>';
+            clientes.forEach((cliente, index) => {
+                const optionPagamento = document.createElement('option');
+                optionPagamento.value = index;
+                optionPagamento.text = cliente.nome;
+                selectPagamento.appendChild(optionPagamento);
+
+                const optionOrcamento = document.createElement('option');
+                optionOrcamento.value = index;
+                optionOrcamento.text = cliente.nome;
+                selectOrcamento.appendChild(optionOrcamento);
+            });
+        }
+
+        // Funcionários
+        function atualizarGraficoCargosSalarios() {
+            const cargoMap = {};
+            funcionarios.forEach(func => {
+                if (cargoMap[func.cargo]) {
+                    cargoMap[func.cargo] += parseFloat(func.salario);
+                } else {
+                    cargoMap[func.cargo] = parseFloat(func.salario);
+                }
+            });
+            chartGraficoCargosSalarios.data.labels = Object.keys(cargoMap);
+            chartGraficoCargosSalarios.data.datasets[0].data = Object.values(cargoMap);
+            chartGraficoCargosSalarios.update();
+        }
+
+        // Estoque
+        function atualizarAlertasEstoque() {
+            const alerta = document.getElementById('alerta-estoque');
+            const baixoEstoque = estoque.filter(produto => produto.quantidade < 5);
+            if (baixoEstoque.length > 0) {
+                alerta.style.display = 'block';
+            } else {
+                alerta.style.display = 'none';
+            }
+        }
+
+        function atualizarGraficoEstoque() {
+            const nomes = estoque.map(prod => prod.nome);
+            const quantidades = estoque.map(prod => prod.quantidade);
+            chartGraficoEstoque.data.labels = nomes;
+            chartGraficoEstoque.data.datasets[0].data = quantidades;
+            chartGraficoEstoque.update();
+        }
+
+        // Orçamentos
+        function atualizarTabelaOrcamentos() {
+            const tabela = document.getElementById('tabela-orcamentos').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            orcamentos.forEach((orcamento, index) => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = clientes[orcamento.cliente].nome;
+                row.insertCell(1).innerText = orcamento.desc ricao;
+                row.insertCell(2).innerText = 'R$ ' + parseFloat(orcamento.valorTotal).toFixed(2);
+                row.insertCell(3).innerText = orcamento.validade;
+                row.insertCell(4).innerText = orcamento.condicoesPagamento;
+                const actions = row.insertCell(5);
+                actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="imprimirOrcamento(${index})"><i class="fas fa-print me-1"></i> Imprimir</button>
+                                     <button class="btn btn-secondary btn-sm me-2" onclick="editarOrcamento(${index})"><i class="fas fa-edit me-1"></i> Editar</button>
+                                     <button class="btn btn-danger btn-sm" onclick="excluirOrcamento(${index})"><i class="fas fa-trash-alt"></i></button>`;
+            });
+        }
+
+        // Contratos
+        function atualizarTabelaContratos() {
+            const tabela = document.getElementById('tabela-contratos').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            contratos.forEach((contrato, index) => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = contrato.contratante.nome;
+                row.insertCell(1).innerText = contrato.contratada.nome;
+                row.insertCell(2).innerText = 'R$ ' + parseFloat(contrato.valorTotal).toFixed(2);
+                row.insertCell(3).innerText = contrato.dataAssinatura;
+                const actions = row.insertCell(4);
+                actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="salvarContratoPDF(${index})"><i class="fas fa-save"></i></button>
+                                     <button class="btn btn-secondary btn-sm me-2" onclick="editarContrato(${index})"><i class="fas fa-edit me-1"></i> Editar</button>
+                                     <button class="btn btn-danger btn-sm" onclick="excluirContrato(${index})"><i class="fas fa-trash-alt"></i></button>`;
+            });
+        }
+
+        // Relatórios
+        function atualizarTabelaRelatorios(filtroData = null, filtroStatus = null) {
+            const tabela = document.getElementById('tabela-relatorios').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            let dadosFiltrados = orcamentos;
+
+            if (filtroData) {
+                dadosFiltrados = dadosFiltrados.filter(orc => orc.dataAssinatura === filtroData);
+            }
+
+            if (filtroStatus) {
+                dadosFiltrados = dadosFiltrados.filter(orc => orc.status === filtroStatus);
+            }
+
+            dadosFiltrados.forEach(orcamento => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = orcamento.dataAssinatura;
+                row.insertCell(1).innerText = clientes[orcamento.cliente].nome;
+                row.insertCell(2).innerText = orcamento.status || 'N/A';
+                row.insertCell(3).innerText = 'R$ ' + parseFloat(orcamento.valorTotal).toFixed(2);
+            });
+
+            atualizarRelatorioGrafico(dadosFiltrados);
+        }
+
+        function atualizarRelatorioGrafico(dados) {
+            const ctx = document.getElementById('relatorio-grafico').getContext('2d');
+            let labels = ['Pendente', 'Em Andamento', 'Concluído'];
+            let counts = [0, 0, 0];
+
+            dados.forEach(orc => {
+                if (orc.status === 'Pendente') counts[0]++;
+                if (orc.status === 'Em Andamento') counts[1]++;
+                if (orc.status === 'Concluído') counts[2]++;
+            });
+
+            chartRelatorioGrafico.data.labels = labels;
+            chartRelatorioGrafico.data.datasets[0].data = counts;
+            chartRelatorioGrafico.update();
+        }
+
+        // Transações
+        function atualizarTabelaTransacoes() {
+            const tabela = document.getElementById('tabela-transacoes').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            transactions.forEach((tx, index) => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = tx.data;
+                row.insertCell(1).innerText = tx.descricao;
+                row.insertCell(2).innerText = tx.tipo;
+                row.insertCell(3).innerText = tx.categoria;
+                row.insertCell(4).innerText = 'R$ ' + tx.valor.toFixed(2);
+                const actions = row.insertCell(5);
+                actions.innerHTML = `<button class="btn btn-danger btn-sm" onclick="excluirTransacao(${index})"><i class="fas fa-trash-alt"></i></button>`;
+            });
+        }
+
+        // Salvar Contrato
+        function salvarContrato() {
+            const form = document.getElementById('form-contratos');
+            const contrato = {
+                contratante: {
+                    nome: document.getElementById('contrato-nome-contratante').value,
+                    cpfCnpj: document.getElementById('contrato-cpf-cnpj-contratante').value,
+                    telefone: document.getElementById('contrato-telefone-contratante').value,
+                    endereco: document.getElementById('contrato-endereco-contratante').value
+                },
+                contratada: {
+                    nome: document.getElementById('contrato-nome-contratada').value,
+                    cnpj: document.getElementById('contrato-cnpj-contratada').value,
+                    telefone: document.getElementById('contrato-telefone-contratada').value,
+                    endereco: document.getElementById('contrato-endereco-contratada').value
+                },
+                descricaoServico: document.getElementById('contrato-descricao-servico').value,
+                prazoExecucao: document.getElementById('contrato-prazo-execucao').value,
+                valorTotal: document.getElementById('contrato-valor-total').value,
+                sinalEntrada: document.getElementById('contrato-sinal-entrada').value,
+                numParcelas: document.getElementById('contrato-num-parcelas').value,
+                banco: document.getElementById('contrato-nome-banco').value,
+                agencia: document.getElementById('contrato-agencia').value,
+                conta: document.getElementById('contrato-conta').value,
+                garantiaMeses: document.getElementById('contrato-garantia-meses').value,
+                foro: document.getElementById('contrato-foro').value,
+                localData: document.getElementById('contrato-local-data').value,
+                dataAssinatura: new Date().toLocaleDateString('pt-BR'),
+                status: 'Ativo'
+            };
+            contratos.push(contrato);
+            atualizarTabelaContratos();
+            alert('Contrato salvo com sucesso!');
+            form.reset();
+            atualizarDashboardCharts();
+        }
+
+        1215    // Imprimir Contrato
+1216    function imprimirContrato() {
+1217        // Salva o conteúdo original
+1218        const conteudoOriginal = document.body.innerHTML;
+1219    
+1220        // Pega apenas o conteúdo do formulário de contrato
+1221        const conteudoContrato = document.getElementById('form-contratos').innerHTML;
+1222    
+1223        // Substitui o conteúdo do body pelo conteúdo do contrato
+1224        document.body.innerHTML = conteudoContrato;
+1225    
+1226        // Adiciona estilos para impressão
+1227        const style = document.createElement('style');
+1228        style.innerHTML = `
+1229            @media print {
+1230                body { font-size: 12pt; }
+1231                .no-print { display: none; }
+1232            }
+1233        `;
+1234        document.head.appendChild(style);
+1235    
+1236        // Imprime
+1237        window.print();
+1238    
+1239        // Restaura o conteúdo original
+1240        document.body.innerHTML = conteudoOriginal;
+1241    }
+
+        // Imprimir Orçamentos
+        function imprimirOrcamentos() {
+            window.print();
+        }
+
+        // Imprimir Orçamento específico
+        function imprimirOrcamento(index) {
+            const orcamento = orcamentos[index];
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 10;
+            doc.setFontSize(16);
+            doc.text("Orçamento", 105, y, { align: "center" });
+            y += 10;
+
+            doc.setFontSize(12);
+            doc.text(`Cliente: ${clientes[orcamento.cliente].nome}`, 10, y);
+            y += 7;
+            doc.text(`Descrição: ${orcamento.descricao}`, 10, y);
+            y += 7;
+            doc.text(`Valor Total: R$ ${parseFloat(orcamento.valorTotal).toFixed(2)}`, 10, y);
+            y += 7;
+            doc.text(`Validade: ${orcamento.validade}`, 10, y);
+            y += 7;
+            doc.text(`Condições de Pagamento: ${orcamento.condicoesPagamento}`, 10, y);
+            y += 10;
+
+            doc.save(`Orcamento_${clientes[orcamento.cliente].nome}_${index +1}.pdf`);
+        }
+
+        // Adicionar Cliente
+        document.getElementById('form-clientes').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const cliente = {
+                nome: document.getElementById('cliente-nome').value,
+                email: document.getElementById('cliente-email').value,
+                telefone: document.getElementById('cliente-telefone').value,
+                endereco: document.getElementById('cliente-endereco').value
+            };
+            clientes.push(cliente);
+            const tabela = document.getElementById('tabela-clientes').getElementsByTagName('tbody')[0];
+            const row = tabela.insertRow();
+            row.insertCell(0).innerText = cliente.nome;
+            row.insertCell(1).innerText = cliente.email;
+            row.insertCell(2).innerText = cliente.telefone;
+            row.insertCell(3).innerText = cliente.endereco;
+            const actions = row.insertCell(4);
+            actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="editarCliente(${clientes.length -1})"><i class="fas fa-edit"></i></button>
+                                 <button class="btn btn-danger btn-sm" onclick="excluirCliente(${clientes.length -1})"><i class="fas fa-trash-alt"></i></button>`;
+            this.reset();
+            atualizarSelecoesClientes();
+            atualizarChartPagamentos();
+            atualizarDashboardCharts();
+        });
+
+        // Editar Cliente
+        function editarCliente(index) {
+            const cliente = clientes[index];
+            document.getElementById('editar-cliente-index').value = index;
+            document.getElementById('editar-cliente-nome').value = cliente.nome;
+            document.getElementById('editar-cliente-email').value = cliente.email;
+            document.getElementById('editar-cliente-telefone').value = cliente.telefone;
+            document.getElementById('editar-cliente-endereco').value = cliente.endereco;
+            const editModal = new bootstrap.Modal(document.getElementById('editClienteModal'));
+            editModal.show();
+        }
+
+        // Salvar Edição de Cliente
+        document.getElementById('form-edit-cliente').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const index = document.getElementById('editar-cliente-index').value;
+            clientes[index].nome = document.getElementById('editar-cliente-nome').value;
+            clientes[index].email = document.getElementById('editar-cliente-email').value;
+            clientes[index].telefone = document.getElementById('editar-cliente-telefone').value;
+            clientes[index].endereco = document.getElementById('editar-cliente-endereco').value;
+            atualizarTabelaClientes();
+            atualizarSelecoesClientes();
+            atualizarChartPagamentos();
+            atualizarDashboardCharts();
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editClienteModal'));
+            editModal.hide();
+        });
+
+        // Excluir Cliente
+        function excluirCliente(index) {
+            if(confirm('Tem certeza que deseja excluir este cliente?')) {
+                clientes.splice(index, 1);
+                atualizarTabelaClientes();
+                atualizarSelecoesClientes();
+                atualizarChartPagamentos();
+                atualizarDashboardCharts();
+            }
+        }
+
+        function atualizarTabelaClientes() {
+            const tabela = document.getElementById('tabela-clientes').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            clientes.forEach((cliente, index) => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = cliente.nome;
+                row.insertCell(1).innerText = cliente.email;
+                row.insertCell(2).innerText = cliente.telefone;
+                row.insertCell(3).innerText = cliente.endereco;
+                const actions = row.insertCell(4);
+                actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="editarCliente(${index})"><i class="fas fa-edit"></i></button>
+                                     <button class="btn btn-danger btn-sm" onclick="excluirCliente(${index})"><i class="fas fa-trash-alt"></i></button>`;
+            });
+        }
+
+        // Adicionar Funcionário
+        document.getElementById('form-funcionarios').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const funcionario = {
+                nome: document.getElementById('funcionario-nome').value,
+                cargo: document.getElementById('funcionario-cargo').value,
+                salario: parseFloat(document.getElementById('funcionario-salario').value),
+                dataAdmissao: document.getElementById('funcionario-admissao').value
+            };
+            funcionarios.push(funcionario);
+            const tabela = document.getElementById('tabela-funcionarios').getElementsByTagName('tbody')[0];
+            const row = tabela.insertRow();
+            row.insertCell(0).innerText = funcionario.nome;
+            row.insertCell(1).innerText = funcionario.cargo;
+            row.insertCell(2).innerText = 'R$ ' + funcionario.salario.toFixed(2);
+            row.insertCell(3).innerText = funcionario.dataAdmissao;
+            const actions = row.insertCell(4);
+            actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="editarFuncionario(${funcionarios.length -1})"><i class="fas fa-edit"></i></button>
+                                 <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${funcionarios.length -1})"><i class="fas fa-trash-alt"></i></button>`;
+            this.reset();
+            atualizarGraficoCargosSalarios();
+            atualizarDashboardCharts();
+        });
+
+        // Editar Funcionário
+        function editarFuncionario(index) {
+            const funcionario = funcionarios[index];
+            document.getElementById('editar-funcionario-index').value = index;
+            document.getElementById('editar-funcionario-nome').value = funcionario.nome;
+            document.getElementById('editar-funcionario-cargo').value = funcionario.cargo;
+            document.getElementById('editar-funcionario-salario').value = funcionario.salario;
+            document.getElementById('editar-funcionario-admissao').value = funcionario.dataAdmissao;
+            const editModal = new bootstrap.Modal(document.getElementById('editFuncionarioModal'));
+            editModal.show();
+        }
+
+        // Salvar Edição de Funcionário
+        document.getElementById('form-edit-funcionario').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const index = document.getElementById('editar-funcionario-index').value;
+            funcionarios[index].nome = document.getElementById('editar-funcionario-nome').value;
+ funcionarios[index].cargo = document.getElementById('editar-funcionario-cargo').value;
+            funcionarios[index].salario = parseFloat(document.getElementById('editar-funcionario-salario').value);
+            funcionarios[index].dataAdmissao = document.getElementById('editar-funcionario-admissao').value;
+            atualizarTabelaFuncionarios();
+            atualizarGraficoCargosSalarios();
+            atualizarDashboardCharts();
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editFuncionarioModal'));
+            editModal.hide();
+        });
+
+        // Excluir Funcionário
+        function excluirFuncionario(index) {
+            if(confirm('Tem certeza que deseja excluir este funcionário?')) {
+                funcionarios.splice(index, 1);
+                atualizarTabelaFuncionarios();
+                atualizarGraficoCargosSalarios();
+                atualizarDashboardCharts();
+            }
+        }
+
+        function atualizarTabelaFuncionarios() {
+            const tabela = document.getElementById('tabela-funcionarios').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            funcionarios.forEach((funcionario, index) => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = funcionario.nome;
+                row.insertCell(1).innerText = funcionario.cargo;
+                row.insertCell(2).innerText = 'R$ ' + funcionario.salario.toFixed(2);
+                row.insertCell(3).innerText = funcionario.dataAdmissao;
+                const actions = row.insertCell(4);
+                actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="editarFuncionario(${index})"><i class="fas fa-edit"></i></button>
+                                     <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${index})"><i class="fas fa-trash-alt"></i></button>`;
+            });
+        }
+
+        // Adicionar Projeto
+        document.getElementById('form-projetos').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const projeto = {
+                nome: document.getElementById('projeto-nome').value,
+                descricao: document.getElementById('projeto-descricao').value,
+                dataEntrega: document.getElementById('projeto-data').value,
+                status: document.getElementById('projeto-status').value,
+                progresso: 0
+            };
+            projetos.push(projeto);
+            const tabela = document.getElementById('tabela-projetos').getElementsByTagName('tbody')[0];
+            const row = tabela.insertRow();
+            row.insertCell(0).innerText = projeto.nome;
+            row.insertCell(1).innerText = projeto.descricao;
+            row.insertCell(2).innerText = projeto.dataEntrega;
+            row.insertCell(3).innerText = projeto.status;
+            row.insertCell(4).innerHTML = `<div class="progress">
+                                            <div class="progress-bar" role="progressbar" style="width: ${projeto.progresso}%;" aria-valuenow="${projeto.progresso}" aria-valuemin="0" aria-valuemax="100">${projeto.progresso}%</div>
+                                           </div>`;
+            const actions = row.insertCell(5);
+            actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="editarProjeto(${projetos.length -1})"><i class="fas fa-edit"></i></button>
+                                 <button class="btn btn-danger btn-sm" onclick="excluirProjeto(${projetos.length -1})"><i class="fas fa-trash-alt"></i></button>`;
+            this.reset();
+            atualizarDashboardCharts();
+        });
+
+        // Editar Projeto
+        function editarProjeto(index) {
+            const projeto = projetos[index];
+            document.getElementById('editar-projeto-index').value = index;
+            document.getElementById('editar-projeto-nome').value = projeto.nome;
+            document.getElementById('editar-projeto-descricao').value = projeto.descricao;
+            document.getElementById('editar-projeto-data').value = projeto.dataEntrega;
+            document.getElementById('editar-projeto-status').value = projeto.status;
+            document.getElementById('editar-projeto-progresso').value = projeto.progresso;
+            const editModal = new bootstrap.Modal(document.getElementById('editProjetoModal'));
+            editModal.show();
+        }
+
+        // Salvar Edição de Projeto
+        document.getElementById('form-edit-projeto').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const index = document.getElementById('editar-projeto-index').value;
+            projetos[index].nome = document.getElementById('editar-projeto-nome').value;
+            projetos[index].descricao = document.getElementById('editar-projeto-descricao').value;
+            projetos[index].dataEntrega = document.getElementById('editar-projeto-data').value;
+            projetos[index].status = document.getElementById('editar-projeto-status').value;
+            projetos[index].progress o = parseInt(document.getElementById('editar-projeto-progresso').value);
+            atualizarTabelaProjetos();
+            atualizarDashboardCharts();
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editProjetoModal'));
+            editModal.hide();
+        });
+
+        // Excluir Projeto
+        function excluirProjeto(index) {
+            if(confirm('Tem certeza que deseja excluir este projeto?')) {
+                projetos.splice(index, 1);
+                atualizarTabelaProjetos();
+                atualizarDashboardCharts();
+            }
+        }
+
+        function atualizarTabelaProjetos() {
+            const tabela = document.getElementById('tabela-projetos').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            projetos.forEach((projeto, index) => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = projeto.nome;
+                row.insertCell(1).innerText = projeto.descricao;
+                row.insertCell(2).innerText = projeto.dataEntrega;
+                row.insertCell(3).innerText = projeto.status;
+                row.insertCell(4).innerHTML = `<div class="progress">
+                                                <div class="progress-bar" role="progressbar" style="width: ${projeto.progresso}%;" aria-valuenow="${projeto.progresso}" aria-valuemin="0" aria-valuemax="100">${projeto.progresso}%</div>
+                                               </div>`;
+                const actions = row.insertCell(5);
+                actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="editarProjeto(${index})"><i class="fas fa-edit"></i></button>
+                                     <button class="btn btn-danger btn-sm" onclick="excluirProjeto(${index})"><i class="fas fa-trash-alt"></i></button>`;
+            });
+        }
+
+        // Adicionar Pagamento
+        document.getElementById('form-pagamentos').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const clienteIndex = document.getElementById('pagamento-cliente').value;
+            const pagamento = {
+                cliente: clienteIndex,
+                valorTotal: parseFloat(document.getElementById('pagamento-valor').value),
+                numeroParcelas: parseInt(document.getElementById('pagamento-parcelas').value),
+                parcelasPagas: 0,
+                parcelasPendentes: parseInt(document.getElementById('pagamento-parcelas').value),
+                dataPagamento: document.getElementById('pagamento-data').value
+            };
+            pagamentos.push(pagamento);
+            const tabela = document.getElementById('tabela-pagamentos').getElementsByTagName('tbody')[0];
+            const row = tabela.insertRow();
+            row.insertCell(0).innerText = clientes[clienteIndex].nome;
+            row.insertCell(1).innerText = 'R$ ' + pagamento.valorTotal.toFixed(2);
+            row.insertCell(2).innerText = pagamento.parcelasPagas;
+            row.insertCell(3).innerText = pagamento.parcelasPendentes;
+            const actions = row.insertCell(4);
+            actions.innerHTML = `<button class="btn btn-success btn-sm me-2 no-print" onclick="marcarParcelaPaga(${pagamentos.length -1})"><i class="fas fa-check me-1"></i> Marcar Paga</button>
+                                 <button class="btn btn-danger btn-sm" onclick="excluirPagamento(${pagamentos.length -1})"><i class="fas fa-trash-alt"></i></button>`;
+            this.reset();
+            atualizarChartPagamentos();
+            atualizarDashboardCharts();
+        });
+
+        // Marcar Parcela Paga
+        function marcarParcelaPaga(index) {
+            const pagamento = pagamentos[index];
+            if(pagamento.parcelasPendentes > 0){
+                pagamento.parcelasPagas += 1;
+                pagamento.parcelasPendentes -= 1;
+                atualizarTabelaPagamentos();
+                atualizarChartPagamentos();
+                atualizarDashboardCharts();
+                atualizarFluxoCaixaCharts();
+            } else {
+                alert('Todas as parcelas já foram pagas.');
+            }
+        }
+
+        // Excluir Pagamento
+        function excluirPagamento(index) {
+            if(confirm('Tem certeza que deseja excluir este pagamento?')) {
+                pagamentos.splice(index, 1);
+                atualizarTabelaPagamentos();
+                atualizarChartPagamentos();
+                atualizarDashboardCharts();
+            }
+        }
+
+        function atualizarTabelaPagamentos() {
+            const tabela = document.getElementById('tabela-pagamentos').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            pagamentos.forEach((pagamento, index) => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = clientes[pagamento.cliente].nome;
+                row.insertCell(1).innerText = 'R$ ' + pagamento.valorTotal.toFixed(2);
+                row.insertCell(2).innerText = pagamento.par celasPagas;
+                row.insertCell(3).innerText = pagamento.parcelasPendentes;
+                const actions = row.insertCell(4);
+                actions.innerHTML = `<button class="btn btn-success btn-sm me-2 no-print" onclick="marcarParcelaPaga(${index})"><i class="fas fa-check me-1"></i> Marcar Paga</button>
+                                     <button class="btn btn-danger btn-sm" onclick="excluirPagamento(${index})"><i class="fas fa-trash-alt"></i></button>`;
+            });
+        }
+
+        // Adicionar Produto ao Estoque
+        document.getElementById('form-estoque').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const produto = {
+                nome: document.getElementById('estoque-nome').value,
+                descricao: document.getElementById('estoque-descricao').value,
+                preco: parseFloat(document.getElementById('estoque-preco').value),
+                quantidade: parseInt(document.getElementById('estoque-quantidade').value)
+            };
+            estoque.push(produto);
+            const tabela = document.getElementById('tabela-estoque').getElementsByTagName('tbody')[0];
+            const row = tabela.insertRow();
+            row.insertCell(0).innerText = produto.nome;
+            row.insertCell(1).innerText = produto.descricao;
+            row.insertCell(2).innerText = 'R$ ' + produto.preco.toFixed(2);
+            row.insertCell(3).innerText = produto.quantidade;
+            const actions = row.insertCell(4);
+            actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="editarProduto(${estoque.length -1})"><i class="fas fa-edit"></i></button>
+                                 <button class="btn btn-danger btn-sm" onclick="excluirProduto(${estoque.length -1})"><i class="fas fa-trash-alt"></i></button>`;
+            this.reset();
+            atualizarGraficoEstoque();
+            atualizarAlertasEstoque();
+            atualizarDashboardCharts();
+        });
+
+        // Editar Produto
+        function editarProduto(index) {
+            const produto = estoque[index];
+            // Aqui você pode implementar um modal para editar produtos, semelhante aos modais de Cliente e Funcionário
+            alert('Função de edição não implementada.');
+        }
+
+        // Excluir Produto
+        function excluirProduto(index) {
+            if(confirm('Tem certeza que deseja excluir este produto?')) {
+                estoque.splice(index, 1);
+                atualizarTabelaEstoque();
+                atualizarGraficoEstoque();
+                atualizarAlertasEstoque();
+                atualizarDashboardCharts();
+            }
+        }
+
+        function atualizarTabelaEstoque() {
+            const tabela = document.getElementById('tabela-estoque').getElementsByTagName('tbody')[0];
+            tabela.innerHTML = '';
+            estoque.forEach((produto, index) => {
+                const row = tabela.insertRow();
+                row.insertCell(0).innerText = produto.nome;
+                row.insertCell(1).innerText = produto.descricao;
+                row.insertCell(2).innerText = 'R$ ' + produto.preco.toFixed(2);
+                row.insertCell(3).innerText = produto.quantidade;
+                const actions = row.insertCell(4);
+                actions.innerHTML = `<button class="btn btn-primary btn-sm me-2 no-print" onclick="editarProduto(${index})"><i class="fas fa-edit"></i></button>
+                                     <button class="btn btn-danger btn-sm" onclick="excluirProduto(${index})"><i class="fas fa-trash-alt"></i></button>`;
+            });
+        }
+
+        // Adicionar Orçamento
+        document.getElementById('form-orcamentos').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const clienteIndex = document.getElementById('orcamento-cliente').value;
+            const orcamento = {
+                cliente: clienteIndex,
+                descricao: document.getElementById('orcamento-descricao').value,
+                valorTotal: parseFloat(document.getElementById('orcamento-valor').value),
+                validade: document.getElementById('orcamento-validade').value,
+                condicoesPagamento: document.getElementById('orcamento-condicao').value,
+                observacoes: document.getElementById('orcamento-observacoes').value,
+                logo: document.getElementById('orcamento-logo').value, // Placeholder, needs file handling
+                status: 'Pendente',
+                dataAssinatura: new Date().toLocaleDateString('pt-BR')
+            };
+            orcamentos.push(orcamento);
+            atualizarTabelaOrcamentos();
+            this.reset();
+            atualizarDashboardCharts();
+        }
+
+        // Adicionar Transação
+        document.getElementById('form-transacoes').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const transacao = {
+                descricao: document.getElementById('transacao-descricao').value,
+                categoria: document.getElementById('transacao-categoria').value,
+                tipo: document.getElementById(' transacao-tipo').value,
+                valor: parseFloat(document.getElementById('transacao-valor').value),
+                data: document.getElementById('transacao-data').value
+            };
+            transactions.push(transacao);
+            const tabela = document.getElementById('tabela-transacoes').getElementsByTagName('tbody')[0];
+            const row = tabela.insertRow();
+            row.insertCell(0).innerText = transacao.data;
+            row.insertCell(1).innerText = transacao.descricao;
+            row.insertCell(2).innerText = transacao.tipo;
+            row.insertCell(3).innerText = transacao.categoria;
+            row.insertCell(4).innerText = 'R$ ' + transacao.valor.toFixed(2);
+            const actions = row.insertCell(5);
+            actions.innerHTML = `<button class="btn btn-danger btn-sm" onclick="excluirTransacao(${transactions.length -1})"><i class="fas fa-trash-alt"></i></button>`;
+            this.reset();
+            atualizarDashboardCharts();
+            atualizarFluxoCaixaCharts();
+        });
+
+        // Excluir Transação
+        function excluirTransacao(index) {
+            if(confirm('Tem certeza que deseja excluir esta transação?')) {
+                transactions.splice(index, 1);
+                atualizarTabelaTransacoes();
+                atualizarDashboardCharts();
+                atualizarFluxoCaixaCharts();
+            }
+        }
+
+        // Planejamento
+        document.getElementById('form-planejamento-fc').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const previsao = {
+                receitas: parseFloat(document.getElementById('planejamento-receitas').value),
+                despesas: parseFloat(document.getElementById('planejamento-despesas').value),
+                data: new Date().toLocaleDateString('pt-BR')
+            };
+            previsoes.push(previsao);
+            alert('Previsão adicionada com sucesso!');
+            this.reset();
+            // Implementar lógica de exibição se necessário
+        });
+
+        // Exportar PDF
+        document.getElementById('exportar-pdf').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Relatório de Orçamentos", 10, 10);
+            const tabela = document.getElementById('tabela-relatorios');
+            let y = 20;
+            tabela.querySelectorAll('tr').forEach(row => {
+                row.querySelectorAll('th, td').forEach(cell => {
+                    doc.text(cell.innerText, 10, y);
+                    y += 10;
+                });
+                y += 5;
+            });
+            doc.save('relatorio.pdf');
+        });
+
+        // Inicialização dos Gráficos
+        function initializeDashboardCharts() {
+            const ctxEntradas = document.getElementById('chart-entradas').getContext('2d');
+            const ctxSaidas = document.getElementById('chart-saidas').getContext('2d');
+            const ctxSaldo = document.getElementById('chart-saldo').getContext('2d');
+            const ctxFluxoCaixa = document.getElementById('fluxo-caixa-chart').getContext('2d');
+
+            chartEntradas = new Chart(ctxEntradas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Entradas', 'Outros'],
+                    datasets: [{
+                        data: [0, 1],
+                        backgroundColor: ['#28a745', '#6c757d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 20 }
+                        }
+                    }
+                }
+            });
+
+            chartSaidas = new Chart(ctxSaidas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Saídas', 'Outros'],
+                    datasets: [{
+                        data: [0, 1],
+                        backgroundColor: ['#dc3545', '#6c757d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 20 }
+                        }
+                    }
+                }
+            });
+
+            chartSaldo = new Chart(ctxSaldo, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Saldo Atual', 'Déficit'],
+                    datasets: [{
+                        data: [0, 1],
+                        backgroundColor: ['#007bff', '#6c757d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 20 }
+                        }
+                    }
+                }
+            });
+
+            chartFluxoCaixa = new Chart(ctxFluxoCaixa, {
+                type: 'bar',
+                data: {
+                    labels: ['Entradas', 'Saí das'],
+                    datasets: [{
+                        label: 'Valor (R$)',
+                        data: [0, 0],
+                        backgroundColor: ['#28a745', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'R$ ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Inicialização do gráfico de Cargos e Salários
+            const ctxCargosSalarios = document.getElementById('grafico-cargos-salarios').getContext('2d');
+            chartGraficoCargosSalarios = new Chart(ctxCargosSalarios, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Salários (R$)',
+                        data: [],
+                        backgroundColor: '#17a2b8'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'R$ ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Inicialização do gráfico de Estoque
+            const ctxEstoque = document.getElementById('grafico-estoque').getContext('2d');
+            chartGraficoEstoque = new Chart(ctxEstoque, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Quantidade em Estoque',
+                        data: [],
+                        backgroundColor: '#ffc107'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Inicialização do gráfico de Relatórios
+            const ctxRelatorio = document.getElementById('relatorio-grafico').getContext('2d');
+            chartRelatorioGrafico = new Chart(ctxRelatorio, {
+                type: 'pie',
+                data: {
+                    labels: ['Pendente', 'Em Andamento', 'Concluído'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#ffc107', '#17a2b8', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 20 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeFluxoCaixaCharts() {
+            const ctxFluxoComparacao = document.getElementById('fluxo-caixa-comparacao').getContext('2d');
+            const ctxAnalise = document.getElementById('analise-fluxo-caixa').getContext('2d');
+
+            chartFluxoCaixaComparacao = new Chart(ctxFluxoComparacao, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Entradas',
+                            data: [],
+                            backgroundColor: '#28a745'
+                        },
+                        {
+                            label: 'Saídas',
+                            data: [],
+                            backgroundColor: '#dc3545'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': R$ ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            chartAnaliseFluxoCaixa = new Chart(ctxAnalise, {
+                type: 'pie',
+                data: {
+                    labels: ['Receitas', 'Despesas'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#007bff ', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 20 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializePagamentosCharts() {
+            const ctxPagamentos = document.getElementById('grafico-pagamentos').getContext('2d');
+            chartGraficoPagamentos = new Chart(ctxPagamentos, {
+                type: 'pie',
+                data: {
+                    labels: ['Total de Pagamentos'],
+                    datasets: [{
+                        data: [0],
+                        backgroundColor: ['#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 20 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeRelatorioGrafico() {
+            // Implementar se necessário
+        }
+
+        function initializeCharts() {
+            initializeDashboardCharts();
+            initializeFluxoCaixaCharts();
+            initializePagamentosCharts();
+        }
+
+        function atualizarDashboardCharts() {
+            let entradas = transactions
+                .filter(tx => tx.tipo === 'Entrada')
+                .reduce((total, tx) => total + tx.valor, 0);
+
+            let saidas = transactions
+                .filter(tx => tx.tipo === 'Saída' || tx.tipo === 'Despesa')
+                .reduce((total, tx) => total + tx.valor, 0);
+
+            let saldo = entradas - saidas;
+
+            // Atualização dos elementos do Dashboard Principal
+            document.getElementById('total-entradas').innerText = 'R$ ' + entradas.toFixed(2);
+            document.getElementById('total-saidas').innerText = 'R$ ' + saidas.toFixed(2);
+            document.getElementById('saldo-atual').innerText = 'R$ ' + saldo.toFixed(2);
+
+            // Atualização dos elementos Fluxo de Caixa
+            document.getElementById('fc-entradas').innerText = 'R$ ' + entradas.toFixed(2);
+            document.getElementById('fc-saidas').innerText = 'R$ ' + saidas.toFixed(2);
+            document.getElementById('fc-saldo').innerText = 'R$ ' + saldo.toFixed(2);
+
+            chartEntradas.data.datasets[0].data = [entradas, entradas === 0 ? 1 : 0];
+            chartSaidas.data.datasets[0].data = [saidas, saidas === 0 ? 1 : 0];
+            chartSaldo.data.datasets[0].data = [saldo >= 0 ? saldo : 0, saldo < 0 ? Math.abs(saldo) : 0];
+            chartFluxoCaixa.data.datasets[0].data = [entradas, saidas];
+
+            chartEntradas.update();
+            chartSaidas.update();
+            chartSaldo.update();
+            chartFluxoCaixa.update();
+        }
+
+        function atualizarFluxoCaixaCharts() {
+            const fluxoPorMes = {};
+
+            transactions.forEach(tx => {
+                const date = new Date(tx.data);
+                const mes = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
+                if (!fluxoPorMes[mes]) {
+                    fluxoPorMes[mes] = { entradas: 0, saidas: 0 };
+                }
+                if (tx.tipo === 'Entrada') {
+                    fluxoPorMes[mes].entradas += tx.valor;
+                } else if (tx.tipo === 'Saída' || tx.tipo === 'Despesa') {
+                    fluxoPorMes[mes].saidas += tx.valor;
+                }
+            });
+
+            const meses = Object.keys(fluxoPorMes);
+            const entradas = meses.map(mes => fluxoPorMes[mes].entradas);
+            const saidas = meses.map(mes => fluxoPorMes[mes].saidas);
+            const receitas = entradas.reduce((a, b) => a + b, 0);
+            const despesas = saidas.reduce((a, b) => a + b, 0);
+
+            chartFluxoCaixaComparacao.data.labels = meses;
+            chartFluxoCaixaComparacao.data.datasets[0].data = entradas;
+            chartFluxoCaixaComparacao.data.datasets[1].data = saidas;
+            chartFluxoCaixaComparacao.update();
+
+            chartAnaliseFluxoCaixa.data.datasets[0].data = [receitas, despesas];
+            chartAnaliseFluxoCaixa.update();
+        }
+
+        // Atualizar Gráfico de Pagamentos
+        function atualizarChartPagamentos() {
+            const totalPagamentos = pagamentos.reduce((total, pg) => total + pg.valor Total, 0);
+
+            if (chartGraficoPagamentos) {
+                chartGraficoPagamentos.data.datasets[0].data = [totalPagamentos];
+                chartGraficoPagamentos.update();
+            }
+        }
+
+        // Atualização do Gráfico de Estoque
+        function atualizarGraficoEstoque() {
+            const nomes = estoque.map(prod => prod.nome);
+            const quantidades = estoque.map(prod => prod.quantidade);
+            chartGraficoEstoque.data.labels = nomes;
+            chartGraficoEstoque.data.datasets[0].data = quantidades;
+            chartGraficoEstoque.update();
+        }
+
+        // Atualização do Gráfico de Relatórios
+        function atualizarRelatorioGrafico(dadosFiltrados) {
+            const ctx = document.getElementById('relatorio-grafico').getContext('2d');
+            let labels = ['Pendente', 'Em Andamento', 'Concluído'];
+            let counts = [0, 0, 0];
+
+            dadosFiltrados.forEach(orcamento => {
+                if (orcamento.status === 'Pendente') counts[0]++;
+                if (orcamento.status === 'Em Andamento') counts[1]++;
+                if (orcamento.status === 'Concluído') counts[2]++;
+            });
+
+            chartRelatorioGrafico.data.labels = labels;
+            chartRelatorioGrafico.data.datasets[0].data = counts;
+            chartRelatorioGrafico.update();
+        }
+
+        // Salvar Contrato como PDF
+        function salvarContratoPDF(index) {
+            const contrato = contratos[index];
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            let y = 10;
+            doc.setFontSize(16);
+            doc.text("Contrato de Prestação de Serviços", 105, y, { align: "center" });
+            y += 10;
+
+            doc.setFontSize(12);
+            doc.text(`Contratante: ${contrato.contratante.nome}`, 10, y);
+            y += 7;
+            doc.text(`CPF/CNPJ: ${contrato.contratante.cpfCnpj}`, 10, y);
+            y += 7;
+            doc.text(`Telefone: ${contrato.contratante.telefone}`, 10, y);
+            y += 7;
+            doc.text(`Endereço: ${contrato.contratante.endereco}`, 10, y);
+            y += 10;
+
+            doc.text(`Contratada: ${contrato.contratada.nome}`, 10, y);
+            y += 7;
+            doc.text(`CNPJ: ${contrato.contratada.cnpj}`, 10, y);
+            y += 7;
+            doc.text(`Telefone: ${contrato.contratada.telefone}`, 10, y);
+            y += 7;
+            doc.text(`Endereço: ${contrato.contratada.endereco}`, 10, y);
+            y += 10;
+
+            doc.text(`Descrição dos Serviços: ${contrato.descricaoServico}`, 10, y);
+            y += 7;
+            doc.text(`Prazo de Execução: ${contrato.prazoExecucao} dias úteis`, 10, y);
+            y += 10;
+
+            doc.text(`Valor Total: R$ ${contrato.valorTotal.toFixed(2)}`, 10, y);
+            y += 7;
+            doc.text(`Sinal de Entrada: R$ ${contrato.sinalEntrada.toFixed(2)}`, 10, y);
+            y += 7;
+            doc.text(`Número de Parcelas: ${contrato.numParcelas}`, 10, y);
+            y += 10;
+
+            doc.text(`Banco: ${contrato.banco}`, 10, y);
+            y += 7;
+            doc.text(`Agência: ${contrato.agencia}`, 10, y);
+            y += 7;
+            doc.text(`Conta: ${contrato.conta}`, 10, y);
+            y += 10;
+
+            doc.text(`Período de Garantia: ${contrato.garantiaMeses} meses`, 10, y);
+            y += 10;
+
+            doc.text(`Foro: ${contrato.foro}`, 10, y);
+            y += 15;
+
+            doc.text(`Local e Data: ${contrato.localData}`, 10, y);
+            y += 10;
+
+            doc.text("Assinaturas:", 10, y);
+            y += 10;
+            doc.text("Contratante: ____________________________", 10, y);
+            doc.text("Contratada: ____________________________", 110, y);
+            y += 10;
+
+            doc.text("Testem unhas:", 10, y);
+            y += 10;
+            doc.text("Nome: ___________________________ CPF: ______________________________", 10, y);
+            y += 7;
+            doc.text("Assinatura: ________________________ Nome: ___________________________ CPF: ______________________________", 10, y);
+
+            doc.save(`Contrato_${contrato.contratante.nome}_${index +1}.pdf`);
+        }
+
+        // Salvar Orçamento como PDF
+        function salvarOrcamentoPDF(index) {
+            const orcamento = orcamentos[index];
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            let y = 10;
+            doc.setFontSize(16);
+            doc.text("Orçamento", 105, y, { align: "center" });
+            y += 10;
+
+            doc.setFontSize(12);
+            doc.text(`Cliente: ${clientes[orcamento.cliente].nome}`, 10, y);
+            y += 7;
+            doc.text(`Descrição: ${orcamento.descricao}`, 10, y);
+            y += 7;
+            doc.text(`Valor Total: R$ ${parseFloat(orcamento.valorTotal).toFixed(2)}`, 10, y);
+            y += 7;
+            doc.text(`Validade: ${orcamento.validade}`, 10, y);
+            y += 7;
+            doc.text(`Condições de Pagamento: ${orcamento.condicoesPagamento}`, 10, y);
+            y += 10;
+
+            doc.save(`Orcamento_${clientes[orcamento.cliente].nome}_${index +1}.pdf`);
+        }
+
+        // Excluir Orçamento
+        function excluirOrcamento(index) {
+            if(confirm('Tem certeza que deseja excluir este orçamento?')) {
+                orcamentos.splice(index, 1);
+                atualizarTabelaOrcamentos();
+                atualizarDashboardCharts();
+            }
+        }
+
+        // Editar Orçamento
+        function editarOrcamento(index) {
+            const orcamento = orcamentos[index];
+            // Aqui você pode implementar um modal para editar orçamentos, semelhante aos modais de Cliente e Funcionário
+            alert('Função de edição não implementada.');
+        }
+
+        // Inicialização e Atualização dos Gráficos
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            atualizarDashboardCharts();
+            atualizarFluxoCaixaCharts();
+            atualizarGraficoCargosSalarios();
+            atualizarGraficoEstoque();
+            atualizarTabelaClientes();
+            atualizarTabelaFuncionarios();
+            atualizarTabelaProjetos();
+            atualizarTabelaPagamentos();
+            atualizarTabelaOrcamentos();
+            atualizarTabelaTransacoes();
+            atualizarSelecoesClientes();
+            atualizarChartPagamentos();
+            atualizarFluxoCaixa();
+        });
+
+        // Atualizar Fluxo de Caixa
+        function atualizarFluxoCaixa() {
+            const saldo = transactions
+                .filter(tx => tx.tipo === 'Entrada')
+                .reduce((total, tx) => total + tx.valor, 0) -
+                transactions
+                .filter(tx => tx.tipo === 'Saída' || tx.tipo === 'Despesa')
+                .reduce((total, tx) => total + tx.valor, 0);
+
+            atualizarAlertasFluxoCaixa(saldo);
+        }
+
+        // Atualizar Alertas de Fluxo de Caixa
+        function atualizarAlertasFluxoCaixa(saldo) {
+            const alertaNegativo = document.getElementById('alerta-fluxo-negativo');
+            const alertaBaixo = document.getElementById('alerta-fluxo-baixo');
+
+            if(saldo < 0) {
+                alertaNegativo.style.display = 'block';
+            } else {
+                alertaNegativo.style.display = 'none';
+            }
+
+            if(saldo < 1000) { // Exemplo de limite para baixo saldo
+                alertaBaixo.style.display = 'block';
+            } else {
+                alertaBaixo.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
